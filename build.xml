@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<project default="compile" name="firstbuild">
+    <property name="build.debug" value="true"/>
+    <property name="build.dir" location="build"/>
+    <property name="build.classes.dir" location="${build.dir}/classes"/>
+    <property name="test.dir" location="${build.dir}/test"/>
+    <property name="test.classes.dir" location="${test.dir}/classes"/>
+    <property name="test.data.dir" location="${test.dir}/data"/>
+    <property name="test.reports.dir" location="${test.dir}/reports"/>
+
+    <property name="test.suite" value="cn.meixs.MyHelloTest"/>
+
+    <path id="compile.classpath">
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="test.compile.classpath">
+        <path refid="compile.classpath"/>
+        <pathelement location="${build.classes.dir}"/>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="test.compile.classpath"/>
+        <pathelement location="${test.classes.dir}"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="${build.classes.dir}"/>
+    </target>
+
+    <target name="test-init">
+        <mkdir dir="${test.classes.dir}"/>
+        <delete dir="${test.data.dir}"/>
+        <delete dir="${test.reports.dir}"/>
+        <mkdir dir="${test.data.dir}"/>
+        <mkdir dir="${test.reports.dir}"/>
+    </target>
+
+    <target name="test-compile" depends="compile,test-init">
+        <javac destdir="${test.classes.dir}" debug="true" includeAntRuntime="true" srcdir="test">
+            <classpath refid="test.compile.classpath"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="test-compile">
+        <junit printsummary="false"
+               errorProperty="test.failed"
+               failureProperty="test.failed">
+            <classpath>
+                <path refid="test.classpath"/>
+            </classpath>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest todir="${test.data.dir}">
+                <fileset dir="${test.classes.dir}"
+                         includes="**/*Test.class"/>
+            </batchtest>
+        </junit>
+
+        <junitreport todir="${test.data.dir}">
+            <fileset dir="${test.data.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames"
+                    todir="${test.reports.dir}"/>
+        </junitreport>
+
+        <fail if="test.failed">
+            Tests failed. Check ${test.reports.dir}
+        </fail>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac destdir="${build.classes.dir}"
+               debug="true"
+               includeAntRuntime="true"
+               srcdir="src">
+            <classpath refid="compile.classpath"/>
+        </javac>
+    </target>
+
+    <target name="clean" depends="init">
+        <delete dir="build"/>
+    </target>
+</project>
